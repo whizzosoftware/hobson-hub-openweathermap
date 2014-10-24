@@ -45,8 +45,6 @@ public class OpenWeatherMapPlugin extends AbstractHobsonPlugin {
 
     public OpenWeatherMapPlugin(String pluginId) {
         super(pluginId);
-
-        addConfigurationMetaData(new ConfigurationMetaData(PROP_CITY_STATE, "City, State", "The city and state from which you want the current conditions reported (format: City, State)", ConfigurationMetaData.Type.STRING));
     }
 
     @Override
@@ -55,7 +53,9 @@ public class OpenWeatherMapPlugin extends AbstractHobsonPlugin {
     }
 
     @Override
-    public void init(Dictionary config) {
+    public void onStartup(Dictionary config) {
+        addConfigurationMetaData(new ConfigurationMetaData(PROP_CITY_STATE, "City, State", "The city and state from which you want the current conditions reported (format: City, State)", ConfigurationMetaData.Type.STRING));
+
         try {
             createUri(config);
         } catch (IOException e) {
@@ -64,7 +64,7 @@ public class OpenWeatherMapPlugin extends AbstractHobsonPlugin {
     }
 
     @Override
-    public void stop() {
+    public void onShutdown() {
     }
 
     @Override

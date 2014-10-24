@@ -28,7 +28,7 @@ public class OpenWeatherMapPluginTest {
         OpenWeatherMapPlugin plugin = new OpenWeatherMapPlugin("id");
         plugin.setVariableManager(vm);
         assertEquals(PluginStatus.Status.INITIALIZING, plugin.getStatus().getStatus());
-        plugin.init(new Hashtable());
+        plugin.onStartup(new Hashtable());
         assertEquals(PluginStatus.Status.NOT_CONFIGURED, plugin.getStatus().getStatus());
         assertEquals(0, vm.globalVariables.size());
     }
@@ -41,7 +41,7 @@ public class OpenWeatherMapPluginTest {
         assertEquals(PluginStatus.Status.INITIALIZING, plugin.getStatus().getStatus());
         Hashtable config = new Hashtable();
         config.put(OpenWeatherMapPlugin.PROP_CITY_STATE, "Denver, CO");
-        plugin.init(config);
+        plugin.onStartup(config);
         assertEquals(PluginStatus.Status.RUNNING, plugin.getStatus().getStatus());
         assertEquals(1, vm.globalVariables.size());
         List<HobsonVariable> vars = vm.globalVariables.get(plugin.getId());
@@ -58,7 +58,7 @@ public class OpenWeatherMapPluginTest {
         OpenWeatherMapPlugin plugin = new OpenWeatherMapPlugin("id");
         plugin.setVariableManager(vm);
         assertEquals(PluginStatus.Status.INITIALIZING, plugin.getStatus().getStatus());
-        plugin.init(new Hashtable());
+        plugin.onStartup(new Hashtable());
         assertEquals(PluginStatus.Status.NOT_CONFIGURED, plugin.getStatus().getStatus());
 
         Hashtable config = new Hashtable();
@@ -79,7 +79,7 @@ public class OpenWeatherMapPluginTest {
         OpenWeatherMapPlugin plugin = new OpenWeatherMapPlugin("id");
         plugin.setVariableManager(vm);
         assertEquals(PluginStatus.Status.INITIALIZING, plugin.getStatus().getStatus());
-        plugin.init(config);
+        plugin.onStartup(config);
         assertEquals(PluginStatus.Status.RUNNING, plugin.getStatus().getStatus());
 
         List<HobsonVariable> vars = vm.globalVariables.get(plugin.getId());
@@ -106,7 +106,7 @@ public class OpenWeatherMapPluginTest {
 
         List<VariableUpdate> updates = plugin.parseServerResponse(json);
         assertEquals(2, updates.size());
-        assertEquals(updates.get(0).getName(), "temp_c");
+        assertEquals(updates.get(0).getName(), VariableConstants.TEMP_C);
         assertEquals(33.0, updates.get(0).getValue());
         assertEquals(updates.get(1).getName(), VariableConstants.TEMP_F);
         assertEquals(91.4, updates.get(1).getValue());

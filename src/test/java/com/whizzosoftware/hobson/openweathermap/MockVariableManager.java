@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.openweathermap;
 
+import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.HobsonVariableImpl;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
@@ -74,7 +75,7 @@ public class MockVariableManager implements VariableManager {
     }
 
     @Override
-    public void fireVariableUpdateNotification(VariableUpdate update) {
+    public void fireVariableUpdateNotification(HobsonPlugin plugin, VariableUpdate update) {
         List<HobsonVariable> vars = getVariableList(update.getPluginId());
         HobsonVariable found = null;
         for (HobsonVariable hv : vars) {
@@ -91,9 +92,9 @@ public class MockVariableManager implements VariableManager {
     }
 
     @Override
-    public void fireVariableUpdateNotifications(List<VariableUpdate> updates) {
+    public void fireVariableUpdateNotifications(HobsonPlugin plugin, List<VariableUpdate> updates) {
         for (VariableUpdate vu : updates) {
-            fireVariableUpdateNotification(vu);
+            fireVariableUpdateNotification(plugin, vu);
         }
     }
 
