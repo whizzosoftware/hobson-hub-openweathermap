@@ -49,7 +49,7 @@
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api</artifactId>
-            <version>0.1.5-SNAPSHOT</version>
+            <version>0.1.5</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -95,6 +95,11 @@
                         <Provide-Capability>hobson.plugin=com.whizzosoftware.hobson.openweathermap.OpenWeatherMapPlugin</Provide-Capability>
                     </instructions>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.1</version>
             </plugin>
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
