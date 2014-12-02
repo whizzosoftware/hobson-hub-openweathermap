@@ -10,10 +10,10 @@ package com.whizzosoftware.hobson.openweathermap;
 import java.util.Hashtable;
 import java.util.List;
 
+import com.whizzosoftware.hobson.api.plugin.PluginStatus;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
-import com.whizzosoftware.hobson.bootstrap.api.plugin.PluginStatus;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;

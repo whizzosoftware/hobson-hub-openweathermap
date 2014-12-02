@@ -7,13 +7,13 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.openweathermap;
 
+import com.whizzosoftware.hobson.api.config.ConfigurationPropertyMetaData;
 import com.whizzosoftware.hobson.api.plugin.AbstractHobsonPlugin;
+import com.whizzosoftware.hobson.api.plugin.PluginStatus;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.HobsonVariableImpl;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
-import com.whizzosoftware.hobson.bootstrap.api.config.ConfigurationMetaData;
-import com.whizzosoftware.hobson.bootstrap.api.plugin.PluginStatus;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.SimpleHttpConnectionManager;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -54,8 +54,7 @@ public class OpenWeatherMapPlugin extends AbstractHobsonPlugin {
 
     @Override
     public void onStartup(Dictionary config) {
-        addConfigurationMetaData(new ConfigurationMetaData(PROP_CITY_STATE, "City, State", "The city and state from which you want the current conditions reported (format: City, State)", ConfigurationMetaData.Type.STRING));
-
+        addConfigurationPropertyMetaData(new ConfigurationPropertyMetaData(PROP_CITY_STATE, "City, State", "The city and state from which you want the current conditions reported (format: City, State)", ConfigurationPropertyMetaData.Type.STRING));
         try {
             createUri(config);
         } catch (IOException e) {

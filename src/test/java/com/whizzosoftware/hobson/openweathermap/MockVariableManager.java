@@ -10,8 +10,8 @@ package com.whizzosoftware.hobson.openweathermap;
 import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.HobsonVariableImpl;
+import com.whizzosoftware.hobson.api.variable.VariableManager;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
-import com.whizzosoftware.hobson.api.variable.manager.VariableManager;
 
 import java.util.*;
 
@@ -19,63 +19,68 @@ public class MockVariableManager implements VariableManager {
     public Map<String,List<HobsonVariable>> globalVariables = new HashMap<>();
 
     @Override
-    public void publishGlobalVariable(String pluginId, HobsonVariable var) {
+    public void publishGlobalVariable(String userId, String hubId, String pluginId, HobsonVariable var) {
         List<HobsonVariable> list = getVariableList(pluginId);
         list.add(var);
     }
 
     @Override
-    public Collection<HobsonVariable> getGlobalVariables() {
+    public Collection<HobsonVariable> getGlobalVariables(String userId, String hubId) {
         return null;
     }
 
     @Override
-    public void unpublishGlobalVariable(String pluginId, String name) {
-
-    }
-
-    @Override
-    public void publishDeviceVariable(String pluginId, String deviceId, HobsonVariable var) {
-
-    }
-
-    @Override
-    public void unpublishDeviceVariable(String pluginId, String deviceId, String name) {
-
-    }
-
-    @Override
-    public void unpublishAllDeviceVariables(String pluginId, String deviceId) {
-
-    }
-
-    @Override
-    public void unpublishAllPluginVariables(String pluginId) {
-
-    }
-
-    @Override
-    public Collection<HobsonVariable> getDeviceVariables(String pluginId, String deviceId) {
+    public HobsonVariable getGlobalVariable(String userId, String hubId, String name) {
         return null;
     }
 
     @Override
-    public HobsonVariable getDeviceVariable(String pluginId, String deviceId, String name) {
+    public void unpublishGlobalVariable(String userId, String hubId, String pluginId, String name) {
+
+    }
+
+    @Override
+    public void publishDeviceVariable(String userId, String hubId, String pluginId, String deviceId, HobsonVariable var) {
+
+    }
+
+    @Override
+    public void unpublishDeviceVariable(String userId, String hubId, String pluginId, String deviceId, String name) {
+
+    }
+
+    @Override
+    public void unpublishAllDeviceVariables(String userId, String hubId, String pluginId, String deviceId) {
+
+    }
+
+    @Override
+    public void unpublishAllPluginVariables(String userId, String hubId, String pluginId) {
+
+    }
+
+    @Override
+    public Collection<HobsonVariable> getDeviceVariables(String userId, String hubId, String pluginId, String deviceId) {
         return null;
     }
 
     @Override
-    public boolean hasDeviceVariable(String pluginId, String deviceId, String name) {
+    public HobsonVariable getDeviceVariable(String userId, String hubId, String pluginId, String deviceId, String name) {
+        return null;
+    }
+
+    @Override
+    public boolean hasDeviceVariable(String userId, String hubId, String pluginId, String deviceId, String name) {
         return false;
     }
 
     @Override
-    public Long setDeviceVariable(String pluginId, String deviceId, String name, Object value) {
+    public Long setDeviceVariable(String userId, String hubId, String pluginId, String deviceId, String name, Object value) {
         return null;
     }
 
     @Override
-    public void fireVariableUpdateNotification(HobsonPlugin plugin, VariableUpdate update) {
+    public void fireVariableUpdateNotification(String userId, String hubId, HobsonPlugin plugin, VariableUpdate update) {
         List<HobsonVariable> vars = getVariableList(update.getPluginId());
         HobsonVariable found = null;
         for (HobsonVariable hv : vars) {
@@ -92,9 +97,9 @@ public class MockVariableManager implements VariableManager {
     }
 
     @Override
-    public void fireVariableUpdateNotifications(HobsonPlugin plugin, List<VariableUpdate> updates) {
+    public void fireVariableUpdateNotifications(String userId, String hubId, HobsonPlugin plugin, List<VariableUpdate> updates) {
         for (VariableUpdate vu : updates) {
-            fireVariableUpdateNotification(plugin, vu);
+            fireVariableUpdateNotification(userId, hubId, plugin, vu);
         }
     }
 
