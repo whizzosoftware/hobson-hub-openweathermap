@@ -7,11 +7,16 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.openweathermap;
 
+import java.io.ByteArrayInputStream;
+import java.util.Collection;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 
 import com.whizzosoftware.hobson.api.plugin.PluginStatus;
+import com.whizzosoftware.hobson.api.util.UserUtil;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
+import com.whizzosoftware.hobson.api.variable.MockVariableManager;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
 import org.json.JSONException;
@@ -30,7 +35,7 @@ public class OpenWeatherMapPluginTest {
         assertEquals(PluginStatus.Status.INITIALIZING, plugin.getStatus().getStatus());
         plugin.onStartup(new Hashtable());
         assertEquals(PluginStatus.Status.NOT_CONFIGURED, plugin.getStatus().getStatus());
-        assertEquals(0, vm.globalVariables.size());
+        assertEquals(0, vm.getGlobalVariables(UserUtil.DEFAULT_USER, UserUtil.DEFAULT_HUB).size());
     }
 
     @Test
@@ -43,13 +48,15 @@ public class OpenWeatherMapPluginTest {
         config.put(OpenWeatherMapPlugin.PROP_CITY_STATE, "Denver, CO");
         plugin.onStartup(config);
         assertEquals(PluginStatus.Status.RUNNING, plugin.getStatus().getStatus());
-        assertEquals(1, vm.globalVariables.size());
-        List<HobsonVariable> vars = vm.globalVariables.get(plugin.getId());
+        Collection<HobsonVariable> vars = vm.getGlobalVariables(UserUtil.DEFAULT_USER, UserUtil.DEFAULT_HUB);
         assertEquals(2, vars.size());
-        assertEquals(null, vars.get(0).getValue());
-        assertTrue(vars.get(0).getName().equals(VariableConstants.TEMP_F) || vars.get(0).getName().equals(VariableConstants.TEMP_C));
-        assertEquals(null, vars.get(1).getValue());
-        assertTrue(vars.get(1).getName().equals(VariableConstants.TEMP_F) || vars.get(1).getName().equals(VariableConstants.TEMP_C));
+        Iterator<HobsonVariable> it = vars.iterator();
+        HobsonVariable v0 = it.next();
+        HobsonVariable v1 = it.next();
+        assertEquals(null, v0.getValue());
+        assertTrue(v0.getName().equals(VariableConstants.TEMP_F) || v0.getName().equals(VariableConstants.TEMP_C));
+        assertEquals(null, v1.getValue());
+        assertTrue(v1.getName().equals(VariableConstants.TEMP_F) || v1.getName().equals(VariableConstants.TEMP_C));
     }
 
     @Test
@@ -65,37 +72,8 @@ public class OpenWeatherMapPluginTest {
         config.put(OpenWeatherMapPlugin.PROP_CITY_STATE, "Denver, CO");
         plugin.onPluginConfigurationUpdate(config);
         assertEquals(PluginStatus.Status.RUNNING, plugin.getStatus().getStatus());
-        assertEquals(1, vm.globalVariables.size());
-        List<HobsonVariable> vars = vm.globalVariables.get(plugin.getId());
+        Collection<HobsonVariable> vars = vm.getGlobalVariables(UserUtil.DEFAULT_USER, UserUtil.DEFAULT_HUB);
         assertEquals(2, vars.size());
-    }
-
-    @Test
-    public void testOnRefresh() {
-        Hashtable config = new Hashtable();
-        config.put(OpenWeatherMapPlugin.PROP_CITY_STATE, "Denver, CO");
-
-        MockVariableManager vm = new MockVariableManager();
-        OpenWeatherMapPlugin plugin = new OpenWeatherMapPlugin("id");
-        plugin.setVariableManager(vm);
-        assertEquals(PluginStatus.Status.INITIALIZING, plugin.getStatus().getStatus());
-        plugin.onStartup(config);
-        assertEquals(PluginStatus.Status.RUNNING, plugin.getStatus().getStatus());
-
-        List<HobsonVariable> vars = vm.globalVariables.get(plugin.getId());
-        assertEquals(2, vars.size());
-        assertEquals(null, vars.get(0).getValue());
-        assertTrue(vars.get(0).getName().equals(VariableConstants.TEMP_F) || vars.get(0).getName().equals(VariableConstants.TEMP_C));
-        assertEquals(null, vars.get(1).getValue());
-        assertTrue(vars.get(1).getName().equals(VariableConstants.TEMP_F) || vars.get(1).getName().equals(VariableConstants.TEMP_C));
-
-        plugin.onRefresh();
-
-        assertEquals(2, vars.size());
-        assertNotNull(vars.get(0).getValue());
-        assertTrue(vars.get(0).getName().equals(VariableConstants.TEMP_F) || vars.get(0).getName().equals(VariableConstants.TEMP_C));
-        assertNotNull(vars.get(1).getValue());
-        assertTrue(vars.get(1).getName().equals(VariableConstants.TEMP_F) || vars.get(1).getName().equals(VariableConstants.TEMP_C));
     }
 
     @Test
