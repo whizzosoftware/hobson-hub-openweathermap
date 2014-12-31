@@ -96,7 +96,7 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
     }
 
     @Override
-    protected void onHttpResponse(int statusCode, List<Map.Entry<String, String>> headers, InputStream response, Object context) {
+    protected void onHttpResponse(int statusCode, List<Map.Entry<String, String>> headers, String response, Object context) {
         if (statusCode == 200) {
             JSONObject json = new JSONObject(new JSONTokener(response));
             try {
