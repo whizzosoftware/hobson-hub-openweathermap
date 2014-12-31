@@ -3,7 +3,7 @@
     <groupId>com.whizzosoftware.hobson.hub</groupId>
     <artifactId>hobson-hub-openweathermap</artifactId>
     <packaging>bundle</packaging>
-    <version>0.1.5-SNAPSHOT</version>
+    <version>0.1.5</version>
     <name>OpenWeatherMap Plugin</name>
     <description>Provides current outdoor temperature via OpenWeatherMap.org.</description>
     <dependencies>
@@ -128,7 +128,7 @@
     <scm>
         <connection>scm:git:ssh://git@github.com/whizzosoftware/hobson-hub-openweathermap.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/whizzosoftware/hobson-hub-openweathermap.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>hobson-hub-openweathermap-0.1.5</tag>
     </scm>
     <distributionManagement>
         <repository>
