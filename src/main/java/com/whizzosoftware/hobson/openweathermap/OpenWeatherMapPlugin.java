@@ -54,6 +54,7 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
         try {
             createUri(config);
         } catch (Exception e) {
+            logger.error("Error starting OpenWeatherMap plugin", e);
             setStatus(new PluginStatus(PluginStatus.Status.FAILED, "Error starting OpenWeatherMap plugin"));
         }
     }
@@ -151,6 +152,7 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
             if (!varsPublished) {
                 publishGlobalVariable(VariableConstants.TEMP_C, null, HobsonVariable.Mask.READ_ONLY);
                 publishGlobalVariable(VariableConstants.TEMP_F, null, HobsonVariable.Mask.READ_ONLY);
+                varsPublished = true;
             }
             onRefresh();
         } else {
