@@ -40,7 +40,7 @@
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api</artifactId>
-            <version>0.1.8</version>
+            <version>0.3.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -52,7 +52,7 @@
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api-mock</artifactId>
-            <version>0.1.8</version>
+            <version>0.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
