@@ -12,4 +12,4 @@ To find out more and download ready-to-run installers, please visit the
 
 ### hobson-hub-openweathermap
 
-A plugin that provides the external temperature from OpenWeatherMap.org as a global variable.
+A plugin that provides the external temperature from OpenWeatherMap.org.
