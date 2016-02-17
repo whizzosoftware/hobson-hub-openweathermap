@@ -7,22 +7,17 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.openweathermap;
 
-import com.whizzosoftware.hobson.api.config.ConfigurationPropertyMetaData;
 import com.whizzosoftware.hobson.api.plugin.PluginStatus;
 import com.whizzosoftware.hobson.api.plugin.http.AbstractHttpClientPlugin;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
-import com.whizzosoftware.hobson.api.variable.VariableConstants;
-import com.whizzosoftware.hobson.api.variable.VariableUpdate;
+import com.whizzosoftware.hobson.api.property.PropertyContainer;
+import com.whizzosoftware.hobson.api.property.TypedProperty;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.util.*;
 
 /**
@@ -31,13 +26,14 @@ import java.util.*;
  * @author Dan Noguerol
  */
 public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(OpenWeatherMapPlugin.class);
 
+    protected static final String PROP_API_KEY = "api.key";
     protected static final String PROP_CITY_STATE = "city.state";
 
     private String cityState;
     private URI uri;
-    private boolean varsPublished = false;
+    private OpenWeatherMapDevice device;
 
     public OpenWeatherMapPlugin(String pluginId) {
         super(pluginId);
@@ -49,13 +45,12 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
     }
 
     @Override
-    public void onStartup(Dictionary config) {
-        addConfigurationPropertyMetaData(new ConfigurationPropertyMetaData(PROP_CITY_STATE, "City, State", "The city and state from which you want the current conditions reported (format: City, State)", ConfigurationPropertyMetaData.Type.STRING));
+    public void onStartup(PropertyContainer config) {
         try {
             createUri(config);
         } catch (Exception e) {
             logger.error("Error starting OpenWeatherMap plugin", e);
-            setStatus(new PluginStatus(PluginStatus.Status.FAILED, "Error starting OpenWeatherMap plugin"));
+            setStatus(PluginStatus.failed("Error starting OpenWeatherMap plugin"));
         }
     }
 
@@ -64,17 +59,13 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
     }
 
     @Override
-    public void onPluginConfigurationUpdate(Dictionary config) {
+    public void onPluginConfigurationUpdate(PropertyContainer config) {
         try {
             logger.debug("Configuration has changed");
             createUri(config);
         } catch (Exception e) {
             logger.error("Error updating configuration", e);
         }
-    }
-
-    @Override
-    public void onSetDeviceVariable(String deviceId, String variableName, Object value) {
     }
 
     @Override
@@ -97,15 +88,19 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
     }
 
     @Override
+    protected TypedProperty[] createSupportedProperties() {
+        return new TypedProperty[] {
+            new TypedProperty.Builder(PROP_API_KEY, "API Key", "The OpenWeatherMap API key to use for requests", TypedProperty.Type.STRING).build(),
+            new TypedProperty.Builder(PROP_CITY_STATE, "City, State", "The city and state from which you want the current conditions reported (format: City, State)", TypedProperty.Type.STRING).build()
+        };
+    }
+
+    @Override
     protected void onHttpResponse(int statusCode, List<Map.Entry<String, String>> headers, String response, Object context) {
         if (statusCode == 200) {
             JSONObject json = new JSONObject(new JSONTokener(response));
             try {
-                List<VariableUpdate> updates = parseServerResponse(json);
-                // set the variables that have changed
-                if (!updates.isEmpty()) {
-                    fireVariableUpdateNotifications(updates);
-                }
+                device.onUpdate(json);
             } catch (JSONException e) {
                 logger.error("Unknown OpenWeatherMap JSON response: {}", json.toString());
             }
@@ -119,45 +114,31 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
         logger.error("Error retrieving data from OpenWeatherMap", cause);
     }
 
-    protected List<VariableUpdate> parseServerResponse(JSONObject response) throws JSONException {
-        List<VariableUpdate> updates = new ArrayList<>();
-
-        JSONObject obsObj = response.getJSONObject("main");
-
-        // determine which variables have changed and their values
-        Double d = obsObj.getDouble("temp");
-        logger.debug("Temperature in Kelvin is {}", d);
-        Double tempC = d - 273.15;
-        Double tempF = tempC * 1.8 + 32;
-        updates.add(new VariableUpdate(getId(), VariableConstants.TEMP_C, tempC));
-        updates.add(new VariableUpdate(getId(), VariableConstants.TEMP_F, tempF));
-
-        logger.debug("Successfully retrieved OpenWeatherMap data");
-
-        return updates;
-    }
-
-    private void createUri(Dictionary config) throws Exception {
+    private void createUri(PropertyContainer config) throws Exception {
         if (config != null) {
-            String s = (String) config.get("city.state");
+            String s = (String)config.getPropertyValue(PROP_CITY_STATE);
             if (s != null && (cityState == null || !cityState.equals(s))) {
                 this.cityState = s;
-                uri = new URI("http", "api.openweathermap.org", "/data/2.5/weather", "q=" + cityState, null);
+                String queryString = "q=" + cityState;
+                String apiKey = (String)config.getPropertyValue(PROP_API_KEY);
+                if (apiKey != null) {
+                    queryString += "&APPID=" + apiKey;
+                }
+                uri = new URI("http", "api.openweathermap.org", "/data/2.5/weather", queryString, null);
             }
         }
 
         if (uri != null) {
             logger.debug("Using URI: {}", uri.toASCIIString());
-            setStatus(new PluginStatus(PluginStatus.Status.RUNNING));
-            if (!varsPublished) {
-                publishGlobalVariable(VariableConstants.TEMP_C, null, HobsonVariable.Mask.READ_ONLY);
-                publishGlobalVariable(VariableConstants.TEMP_F, null, HobsonVariable.Mask.READ_ONLY);
-                varsPublished = true;
+            setStatus(PluginStatus.running());
+            if (device == null) {
+                device = new OpenWeatherMapDevice(this, "station");
+                publishDevice(device);
             }
             onRefresh();
         } else {
             logger.debug("No plugin configuration; unable to query OpenWeatherMap server");
-            setStatus(new PluginStatus(PluginStatus.Status.NOT_CONFIGURED, "City/state is not set in plugin configuration"));
+            setStatus(PluginStatus.notConfigured("City/state is not set in plugin configuration"));
         }
     }
 }
