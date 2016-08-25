@@ -9,6 +9,8 @@ package com.whizzosoftware.hobson.openweathermap;
 
 import com.whizzosoftware.hobson.api.plugin.PluginStatus;
 import com.whizzosoftware.hobson.api.plugin.http.AbstractHttpClientPlugin;
+import com.whizzosoftware.hobson.api.plugin.http.HttpRequest;
+import com.whizzosoftware.hobson.api.plugin.http.HttpResponse;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
 import com.whizzosoftware.hobson.api.property.TypedProperty;
 import org.json.JSONException;
@@ -17,8 +19,8 @@ import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
-import java.util.*;
 
 /**
  * A plugin that retrieves the current external temperature from OpenWeatherMap.org.
@@ -78,7 +80,7 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
         if (uri != null) {
             try {
                 logger.debug("Requesting OpenWeatherMap data from {}", uri);
-                sendHttpGetRequest(uri, null, null);
+                sendHttpRequest(uri, HttpRequest.Method.GET, null);
             } catch (Exception e) {
                 logger.error("Error retrieving data from OpenWeatherMap", e);
             }
@@ -96,21 +98,25 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
     }
 
     @Override
-    protected void onHttpResponse(int statusCode, List<Map.Entry<String, String>> headers, String response, Object context) {
-        if (statusCode == 200) {
-            JSONObject json = new JSONObject(new JSONTokener(response));
-            try {
-                device.onUpdate(json);
-            } catch (JSONException e) {
-                logger.error("Unknown OpenWeatherMap JSON response: {}", json.toString());
+    public void onHttpResponse(HttpResponse response, Object context) {
+        try {
+            if (response.getStatusCode() == 200) {
+                JSONObject json = new JSONObject(new JSONTokener(response.getBody()));
+                try {
+                    device.onUpdate(json);
+                } catch (JSONException e) {
+                    logger.error("Unknown OpenWeatherMap JSON response: {}", json.toString());
+                }
+            } else {
+                logger.error("Error retrieving data from OpenWeatherMap (" + response.getStatusCode() + ")");
             }
-        } else {
-            logger.error("Error retrieving data from OpenWeatherMap (" + statusCode + ")");
+        } catch (IOException e) {
+            logger.error("Error processing HTTP response", e);
         }
     }
 
     @Override
-    protected void onHttpRequestFailure(Throwable cause, Object context) {
+    public void onHttpRequestFailure(Throwable cause, Object context) {
         logger.error("Error retrieving data from OpenWeatherMap", cause);
     }
 
