@@ -1,53 +1,40 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2016 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.openweathermap;
 
-import com.whizzosoftware.hobson.api.device.AbstractHobsonDevice;
 import com.whizzosoftware.hobson.api.device.DeviceType;
+import com.whizzosoftware.hobson.api.device.proxy.AbstractHobsonDeviceProxy;
 import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
-import com.whizzosoftware.hobson.api.property.PropertyContainer;
 import com.whizzosoftware.hobson.api.property.TypedProperty;
-import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
-import com.whizzosoftware.hobson.api.variable.VariableContext;
-import com.whizzosoftware.hobson.api.variable.VariableUpdate;
+import com.whizzosoftware.hobson.api.variable.VariableMask;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public class OpenWeatherMapDevice extends AbstractHobsonDevice {
+public class OpenWeatherMapDevice extends AbstractHobsonDeviceProxy {
     private static final Logger logger = LoggerFactory.getLogger(OpenWeatherMapDevice.class);
 
     public OpenWeatherMapDevice(HobsonPlugin plugin, String id) {
-        super(plugin, id);
-
-        setDefaultName("OpenWeatherMap Station");
+        super(plugin, id, "OpenWeatherMap Station", DeviceType.WEATHER_STATION);
     }
 
     @Override
-    public void onStartup(PropertyContainer config) {
-        super.onStartup(config);
-
-        publishVariable(VariableConstants.OUTDOOR_TEMP_C, null, HobsonVariable.Mask.READ_ONLY, null);
-        publishVariable(VariableConstants.OUTDOOR_TEMP_F, null, HobsonVariable.Mask.READ_ONLY, null);
-    }
-
-    @Override
-    protected TypedProperty[] createSupportedProperties() {
-        return null;
-    }
-
-    @Override
-    public DeviceType getType() {
-        return DeviceType.WEATHER_STATION;
+    public void onStartup(String name, Map<String,Object> config) {
+        publishVariables(
+            createDeviceVariable(VariableConstants.OUTDOOR_TEMP_C, VariableMask.READ_ONLY),
+            createDeviceVariable(VariableConstants.OUTDOOR_TEMP_F, VariableMask.READ_ONLY)
+        );
     }
 
     @Override
@@ -55,7 +42,23 @@ public class OpenWeatherMapDevice extends AbstractHobsonDevice {
     }
 
     @Override
-    public void onSetVariable(String s, Object o) {
+    protected TypedProperty[] getConfigurationPropertyTypes() {
+        return null;
+    }
+
+    @Override
+    public String getManufacturerName() {
+        return "OpenWeatherMap";
+    }
+
+    @Override
+    public String getManufacturerVersion() {
+        return null;
+    }
+
+    @Override
+    public String getModelName() {
+        return null;
     }
 
     @Override
@@ -63,8 +66,18 @@ public class OpenWeatherMapDevice extends AbstractHobsonDevice {
         return VariableConstants.OUTDOOR_TEMP_F;
     }
 
+    @Override
+    public void onDeviceConfigurationUpdate(Map<String, Object> config) {
+
+    }
+
+    @Override
+    public void onSetVariables(Map<String, Object> values) {
+
+    }
+
     public void onUpdate(JSONObject response) {
-        List<VariableUpdate> updates = new ArrayList<>();
+        Map<String,Object> updates = new HashMap<>();
 
         if (response.has("main")) {
             JSONObject obsObj = response.getJSONObject("main");
@@ -76,12 +89,14 @@ public class OpenWeatherMapDevice extends AbstractHobsonDevice {
 
                 Double tempC = d - 273.15;
                 Double tempF = tempC * 1.8 + 32;
-                updates.add(new VariableUpdate(VariableContext.create(getContext(), VariableConstants.OUTDOOR_TEMP_C), tempC));
-                updates.add(new VariableUpdate(VariableContext.create(getContext(), VariableConstants.OUTDOOR_TEMP_F), tempF));
+                updates.put(VariableConstants.OUTDOOR_TEMP_C, tempC);
+                updates.put(VariableConstants.OUTDOOR_TEMP_F, tempF);
 
                 logger.debug("Successfully retrieved OpenWeatherMap data");
 
-                fireVariableUpdateNotifications(updates);
+                setVariableValues(updates);
+
+                setLastCheckin(System.currentTimeMillis());
             } else {
                 logger.error("Received malformed JSON (missing temp) from OpenWeatherMap");
             }

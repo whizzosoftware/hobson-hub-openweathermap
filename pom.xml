@@ -3,7 +3,7 @@
     <groupId>com.whizzosoftware.hobson.hub</groupId>
     <artifactId>hobson-hub-openweathermap</artifactId>
     <packaging>bundle</packaging>
-    <version>0.5.2-SNAPSHOT</version>
+    <version>0.6.0</version>
     <name>OpenWeatherMap Plugin</name>
     <description>Provides current outdoor temperature via OpenWeatherMap.org.</description>
     <dependencies>
@@ -20,9 +20,15 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-common</artifactId>
+            <version>4.0.21.Final</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api</artifactId>
-            <version>0.9.1</version>
+            <version>0.10.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -46,7 +52,7 @@
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api-mock</artifactId>
-            <version>0.9.0</version>
+            <version>0.10.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -69,7 +75,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>org.osgi.framework,org.osgi.service.cm,org.apache.felix.dm,org.osgi.service.event,org.slf4j,org.json.*,com.whizzosoftware.hobson.api.*;version="[0.9.1,0.10)</Import-Package>
+                        <Import-Package>org.osgi.framework,org.osgi.service.cm,org.apache.felix.dm,org.osgi.service.event,org.slf4j,org.json.*,com.whizzosoftware.hobson.api.*;version="[0.10.0,0.11)</Import-Package>
                         <Bundle-Activator>com.whizzosoftware.hobson.api.osgi.activator.HobsonBundleActivator</Bundle-Activator>
                         <Provide-Capability>hobson.plugin=com.whizzosoftware.hobson.openweathermap.OpenWeatherMapPlugin</Provide-Capability>
                         <Bundle-Category>hobson-plugin</Bundle-Category>

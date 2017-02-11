@@ -1,10 +1,12 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2014 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.openweathermap;
 
 import com.whizzosoftware.hobson.api.plugin.PluginStatus;
@@ -30,6 +32,7 @@ import java.net.URI;
 public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
     private static final Logger logger = LoggerFactory.getLogger(OpenWeatherMapPlugin.class);
 
+    protected static final String DEVICE_ID = "station";
     protected static final String PROP_API_KEY = "api.key";
     protected static final String PROP_CITY_STATE = "city.state";
 
@@ -37,8 +40,8 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
     private URI uri;
     private OpenWeatherMapDevice device;
 
-    public OpenWeatherMapPlugin(String pluginId) {
-        super(pluginId);
+    public OpenWeatherMapPlugin(String pluginId, String version, String description) {
+        super(pluginId, version, description);
     }
 
     @Override
@@ -90,7 +93,7 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
     }
 
     @Override
-    protected TypedProperty[] createSupportedProperties() {
+    protected TypedProperty[] getConfigurationPropertyTypes() {
         return new TypedProperty[] {
             new TypedProperty.Builder(PROP_API_KEY, "API Key", "The OpenWeatherMap API key to use for requests", TypedProperty.Type.STRING).build(),
             new TypedProperty.Builder(PROP_CITY_STATE, "City, State", "The city and state from which you want the current conditions reported (format: City, State)", TypedProperty.Type.STRING).build()
@@ -101,17 +104,20 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
     public void onHttpResponse(HttpResponse response, Object context) {
         try {
             if (response.getStatusCode() == 200) {
-                JSONObject json = new JSONObject(new JSONTokener(response.getBody()));
-                try {
-                    device.onUpdate(json);
-                } catch (JSONException e) {
-                    logger.error("Unknown OpenWeatherMap JSON response: {}", json.toString());
-                }
+                onHttpResponse(new JSONObject(new JSONTokener(response.getBody())));
             } else {
                 logger.error("Error retrieving data from OpenWeatherMap (" + response.getStatusCode() + ")");
             }
         } catch (IOException e) {
             logger.error("Error processing HTTP response", e);
+        }
+    }
+
+    protected void onHttpResponse(JSONObject json) {
+        try {
+            device.onUpdate(json);
+        } catch (JSONException e) {
+            logger.error("Unknown OpenWeatherMap JSON response: {}", json.toString());
         }
     }
 
@@ -138,8 +144,8 @@ public class OpenWeatherMapPlugin extends AbstractHttpClientPlugin {
             logger.debug("Using URI: {}", uri.toASCIIString());
             setStatus(PluginStatus.running());
             if (device == null) {
-                device = new OpenWeatherMapDevice(this, "station");
-                publishDevice(device);
+                device = new OpenWeatherMapDevice(this, DEVICE_ID);
+                publishDeviceProxy(device);
             }
             onRefresh();
         } else {
