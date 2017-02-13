@@ -22,19 +22,37 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A device representing an OpenWeatherMap weather station.
+ *
+ * @author Dan Noguerol
+ */
 public class OpenWeatherMapDevice extends AbstractHobsonDeviceProxy {
     private static final Logger logger = LoggerFactory.getLogger(OpenWeatherMapDevice.class);
 
-    public OpenWeatherMapDevice(HobsonPlugin plugin, String id) {
-        super(plugin, id, "OpenWeatherMap Station", DeviceType.WEATHER_STATION);
+    private JSONObject initialJson;
+
+    OpenWeatherMapDevice(HobsonPlugin plugin, String cityId, String name, JSONObject json) {
+        super(plugin, cityId, name, DeviceType.WEATHER_STATION);
+        this.initialJson = json;
     }
 
     @Override
     public void onStartup(String name, Map<String,Object> config) {
+        // publish the variables
         publishVariables(
             createDeviceVariable(VariableConstants.OUTDOOR_TEMP_C, VariableMask.READ_ONLY),
-            createDeviceVariable(VariableConstants.OUTDOOR_TEMP_F, VariableMask.READ_ONLY)
+            createDeviceVariable(VariableConstants.OUTDOOR_TEMP_F, VariableMask.READ_ONLY),
+            createDeviceVariable(VariableConstants.OUTDOOR_RELATIVE_HUMIDITY, VariableMask.READ_ONLY),
+            createDeviceVariable(VariableConstants.WIND_DIRECTION_DEGREES, VariableMask.READ_ONLY),
+            createDeviceVariable(VariableConstants.WIND_SPEED_MPH, VariableMask.READ_ONLY)
         );
+
+        // process any initial JSON we received
+        if (initialJson != null) {
+            onUpdate(initialJson);
+            initialJson = null;
+        }
     }
 
     @Override
@@ -76,32 +94,49 @@ public class OpenWeatherMapDevice extends AbstractHobsonDeviceProxy {
 
     }
 
-    public void onUpdate(JSONObject response) {
+    void onUpdate(JSONObject response) {
         Map<String,Object> updates = new HashMap<>();
 
         if (response.has("main")) {
             JSONObject obsObj = response.getJSONObject("main");
+
+            // set temperature
             if (obsObj.has("temp")) {
-                // determine which variables have changed and their values
                 Double d = obsObj.getDouble("temp");
-
-                logger.debug("Temperature in Kelvin is {}", d);
-
+                logger.trace("Temperature in Kelvin is {}", d);
                 Double tempC = d - 273.15;
                 Double tempF = tempC * 1.8 + 32;
                 updates.put(VariableConstants.OUTDOOR_TEMP_C, tempC);
                 updates.put(VariableConstants.OUTDOOR_TEMP_F, tempF);
+            }
 
-                logger.debug("Successfully retrieved OpenWeatherMap data");
-
-                setVariableValues(updates);
-
-                setLastCheckin(System.currentTimeMillis());
-            } else {
-                logger.error("Received malformed JSON (missing temp) from OpenWeatherMap");
+            // set humidity
+            if (obsObj.has("humidity")) {
+                Double d = obsObj.getDouble("humidity");
+                logger.trace("Humidity is {}", d);
+                updates.put(VariableConstants.OUTDOOR_RELATIVE_HUMIDITY, d);
             }
         } else {
             logger.error("Received malformed JSON (missing main) from OpenWeatherMap");
+        }
+
+        // send wind info
+        if (response.has("wind")) {
+            JSONObject obsObj = response.getJSONObject("wind");
+            if (obsObj.has("speed")) {
+                updates.put(VariableConstants.WIND_SPEED_MPH, obsObj.getDouble("speed"));
+            }
+            if (obsObj.has("deg")) {
+                updates.put(VariableConstants.WIND_DIRECTION_DEGREES, obsObj.getDouble("deg"));
+            }
+        }
+
+        logger.debug("Successfully retrieved OpenWeatherMap data");
+        setLastCheckin(System.currentTimeMillis());
+
+        // set new variables
+        if (updates.size() > 0) {
+            setVariableValues(updates);
         }
     }
 }
